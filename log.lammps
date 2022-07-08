@@ -1,0 +1,188 @@
+LAMMPS (27 Oct 2021)
+OMP_NUM_THREADS environment is not set. Defaulting to 1 thread. (src/comm.cpp:98)
+  using 1 OpenMP thread(s) per MPI task
+# LAMMPS Input File for Grain Boundaries "Ti":
+
+variable lattype string  "hcp"
+variable latparam equal  2.92
+variable potfile string  'library.meam Co Ti CoTi.meam'
+variable METALL string   "Ti"
+variable ANGLE  string    150.3
+variable DATA_DIR string "DATA_VFE"
+variable DeleteAtom index 10574
+# ---------- Initialize Simulation ---------------------
+clear
+OMP_NUM_THREADS environment is not set. Defaulting to 1 thread. (src/comm.cpp:98)
+  using 1 OpenMP thread(s) per MPI task
+units metal
+dimension 3
+boundary p p p
+atom_style atomic
+
+# ---------- Create Atomistic Structure ---------------------
+shell cd STR/
+read_data Ti_150.3.lmp
+Reading data file ...
+  orthogonal box = (0.0000000 0.82915214 -5.8400000) to (158.00000 104.17085 17.520000)
+  2 by 1 by 1 MPI processor grid
+  reading atoms ...
+  21504 atoms
+  read_data CPU = 0.052 seconds
+shell cd ../
+
+# ---------- Define Interatomic Potential ---------------------
+shell cd Potential/
+pair_style meam
+pair_coeff * * ${potfile} ${METALL}
+pair_coeff * * library.meam Co Ti CoTi.meam ${METALL}
+pair_coeff * * library.meam Co Ti CoTi.meam Ti
+neighbor  2.0 bin
+neigh_modify delay 10 check yes
+shell cd ../
+#---------------------------Settings----------------------------
+compute csym all centro/atom 12
+compute eng all pe/atom
+compute eatoms all reduce sum c_eng
+
+shell mkdir ${DATA_DIR}
+shell mkdir DATA_VFE
+WARNING: Shell command 'mkdir DATA_VFE' failed with error 'File exists' (src/input.cpp:1181)
+shell cd    ${DATA_DIR}
+shell cd    DATA_VFE
+# ---------- Displace atoms and delete overlapping atoms ---------------------
+reset_timestep	0
+
+thermo 10
+thermo_style custom step pe lx ly lz press pxx pyy pzz c_eatoms
+
+#dump 1 all custom 400 dump.relax.1.* id type xs ys zs c_csym c_eng
+
+min_style cg
+minimize 1e-15 1e-15 5000 5000
+WARNING: Using 'neigh_modify every 1 delay 0 check yes' setting during minimization (src/min.cpp:188)
+Neighbor list info ...
+  update every 1 steps, delay 0 steps, check yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 6.8
+  ghost atom cutoff = 6.8
+  binsize = 3.4, bins = 47 31 7
+  3 neighbor lists, perpetual/occasional/extra = 2 1 0
+  (1) pair meam, perpetual
+      attributes: full, newton on
+      pair build: full/bin/atomonly
+      stencil: full/bin/3d
+      bin: standard
+  (2) pair meam, perpetual, half/full from (1)
+      attributes: half, newton on
+      pair build: halffull/newton
+      stencil: none
+      bin: none
+  (3) compute centro/atom, occasional, copy from (1)
+      attributes: full, newton on
+      pair build: copy
+      stencil: none
+      bin: none
+Per MPI rank memory allocation (min/avg/max) = 34.28 | 34.28 | 34.28 Mbytes
+Step PotEng Lx Ly Lz Press Pxx Pyy Pzz c_eatoms 
+       0   -104422.53          158     103.3417        23.36   -5156.2632   -20895.155  0.037913479    5426.3274   -104422.53 
+      10   -104422.53          158     103.3417        23.36   -5156.2563   -20893.536   -1.1894827    5425.9566   -104422.53 
+      20   -104422.53          158     103.3417        23.36   -5156.1727   -20893.308   -1.0153669    5425.8049   -104422.53 
+      30   -104422.53          158     103.3417        23.36   -5156.1766   -20893.325   -1.0104236    5425.8052   -104422.53 
+      36   -104422.53          158     103.3417        23.36   -5156.1767   -20893.325   -1.0101908    5425.8048   -104422.53 
+Loop time of 11.4536 on 2 procs for 36 steps with 21504 atoms
+
+99.4% CPU use with 2 MPI tasks x 1 OpenMP threads
+
+Minimization stats:
+  Stopping criterion = energy tolerance
+  Energy initial, next-to-last, final = 
+     -104422.527085414  -104422.527116123  -104422.527116123
+  Force two-norm initial, final = 0.0020150390 7.9283971e-07
+  Force max component initial, final = 3.7629010e-05 3.0303500e-08
+  Final line search alpha, max atom move = 1.0000000 3.0303500e-08
+  Iterations, force evaluations = 36 72
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 11.372     | 11.38      | 11.389     |   0.2 | 99.36
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 0.048879   | 0.057177   | 0.065474   |   3.5 |  0.50
+Output  | 0.015625   | 0.015625   | 0.015625   |   0.0 |  0.14
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 0.000364   |            |       |  0.00
+
+Nlocal:        10752.0 ave       10752 max       10752 min
+Histogram: 2 0 0 0 0 0 0 0 0 0
+Nghost:        12479.0 ave       12479 max       12479 min
+Histogram: 2 0 0 0 0 0 0 0 0 0
+Neighs:        367104.0 ave      367104 max      367104 min
+Histogram: 2 0 0 0 0 0 0 0 0 0
+FullNghs:      734208.0 ave      734208 max      734208 min
+Histogram: 2 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 1468416
+Ave neighs/atom = 68.285714
+Neighbor list builds = 0
+Dangerous builds = 0
+
+run 0
+WARNING: No fixes defined, atoms won't move (src/verlet.cpp:55)
+Per MPI rank memory allocation (min/avg/max) = 32.28 | 32.28 | 32.28 Mbytes
+Step PotEng Lx Ly Lz Press Pxx Pyy Pzz c_eatoms 
+      36   -104422.53          158     103.3417        23.36   -5156.1767   -20893.325   -1.0101908    5425.8048   -104422.53 
+Loop time of 0 on 2 procs for 0 steps with 21504 atoms
+
+0.0% CPU use with 2 MPI tasks x 1 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0          | 0          | 0          |   0.0 |  0.00
+Neigh   | 0          | 0          | 0          |   0.0 |  0.00
+Comm    | 0          | 0          | 0          |   0.0 |  0.00
+Output  | 0          | 0          | 0          |   0.0 |  0.00
+Modify  | 0          | 0          | 0          |   0.0 |  0.00
+Other   |            | 0          |            |       |  0.00
+
+Nlocal:        10752.0 ave       10752 max       10752 min
+Histogram: 2 0 0 0 0 0 0 0 0 0
+Nghost:        12479.0 ave       12479 max       12479 min
+Histogram: 2 0 0 0 0 0 0 0 0 0
+Neighs:        367104.0 ave      367106 max      367102 min
+Histogram: 1 0 0 0 0 0 0 0 0 1
+FullNghs:      734208.0 ave      734208 max      734208 min
+Histogram: 2 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 1468416
+Ave neighs/atom = 68.285714
+Neighbor list builds = 0
+Dangerous builds = 0
+#undump 1
+
+#variable N equal count(all), counts the total number of atoms in the cell
+#the total number of atoms is stored to the variable N
+
+variable N equal count(all)
+variable No equal $N
+variable No equal 21504
+
+#variable Ei equal "c_eatoms" computes the initial energy of the cell system before the vacancy
+#E is needed to store the initial energy of the system to the variable Ei
+
+variable E equal "c_eatoms"
+variable Ei equal $E
+variable Ei equal -104422.527116106
+
+#---------------------------------------------------------------
+variable r2 equal sqrt(${latparam}^2+${latparam}^2)/4
+variable r2 equal sqrt(2.92^2+${latparam}^2)/4
+variable r2 equal sqrt(2.92^2+2.92^2)/4
+#r2 is the radius of the copper atom
+
+#region select is a region defined so that all atoms within this region are removed
+#region select sphere 54.2446 47.7525 3.95939 ${r2} units box
+group DEL_ATOM id ${DeleteAtom}
+group DEL_ATOM id IDDel
+ERROR: Incorrect range string 'IDDel': Not a valid integer number: 'IDDel' (src/group.cpp:324)
+Last command: group DEL_ATOM id ${DeleteAtom}

@@ -4,9 +4,8 @@ variable lattype string  "hcp"
 variable latparam equal  2.92
 variable potfile string  'library.meam Co Ti CoTi.meam'
 variable METALL string   "Ti"
-variable ANGLE  index    150.3
-variable DATA_DIR string "DumpVFE"
-#variable DeleteAtom string "5429 7540 16357 18168 19200"
+variable Sigma  string    150.3
+variable DATA_DIR string "DATA_VFE"
 variable DeleteAtom index 10574
 # ---------- Initialize Simulation --------------------- 
 clear 
@@ -17,14 +16,16 @@ atom_style atomic
 
 # ---------- Create Atomistic Structure --------------------- 
 shell cd STR/
-read_data ${METALL}_${ANGLE}.lmp
+read_data ${METALL}_${Sigma}.lmp
 shell cd ../
 
 # ---------- Define Interatomic Potential --------------------- 
+shell cd Potential/
 pair_style meam
-pair_coeff * * Potential/${potfile} ${METALL} 
+pair_coeff * * ${potfile} ${METALL} 
 neighbor  2.0 bin
 neigh_modify delay 10 check yes 
+shell cd ../
 #---------------------------Settings----------------------------
 compute csym all centro/atom 12
 compute eng all pe/atom 
@@ -38,13 +39,13 @@ reset_timestep	0
 thermo 10
 thermo_style custom step pe lx ly lz press pxx pyy pzz c_eatoms 
 
-dump 1 all custom 400 dump.relax.1.* id type xs ys zs c_csym c_eng 
+#dump 1 all custom 400 dump.relax.1.* id type xs ys zs c_csym c_eng 
 
 min_style cg
-minimize 1e-25 1e-25 5000 10000
+minimize 1e-15 1e-15 5000 5000
 
 run 0
-undump 1
+#undump 1
 
 #variable N equal count(all), counts the total number of atoms in the cell
 #the total number of atoms is stored to the variable N
@@ -72,10 +73,10 @@ fix 1 all box/relax y 0 vmax 0.001
 thermo 10
 thermo_style custom step pe lx ly lz press pxx pyy pzz c_eatoms 
 
-dump 1 all custom 400 dump.relax.2.* id type xs ys zs c_csym c_eng 
+#dump 1 all custom 400 dump.relax.2.* id type xs ys zs c_csym c_eng 
 
 min_style cg
-minimize 1e-25 1e-25 5000 10000
+minimize 1e-15 1e-15 5000 5000
 
 #variable Ef equal "c_eatoms" computes the final energy of the cell system after the vacancy
 #The final energy is stored to the variable Ef 
